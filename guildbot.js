@@ -1,14 +1,44 @@
-// Packages
+// Packages & helpers
 const Discord = require('discord.js');
+const Blizzard = require('./helpers/blizzard-api.js');
+const dotenv = require('dotenv').config();
 const mysql = require('mysql');
-const Blizzard = require('./helpers/blizzard-api.js')
 
-require('dotenv').config()
-
+// Client instance
 const client = new Discord.Client();
 
+// DB instance
+const connection = mysql.createConnection({
+  host     : 'localhost',
+  user     : process.env.MYSQL_USER,
+  password : process.env.MYSQL_PASSWORD,
+  database : 'guild_db'
+});
+
 //  Start up
-client.on('ready', () => {
+client.on('ready', async () => {
+  // Connect to DB
+  try {
+    const res = await connection.connect();
+    console.log('Connected to mysql');
+  } catch(err) {
+    console.log(err);
+  }
+  // Create roster table if it doesn't exist
+  const stmt = `
+    CREATE TABLE members (
+      name VARCHAR(255),
+      role VARCHAR(255),
+      class VARCHAR(255),
+      spec VARCHAR(255)
+    )`
+
+  try {
+    const res = connection.query(stmt);
+    console.log('Created members table');
+  } catch(err) {
+    console.log(err);
+  }
   console.log('Guildbot initialized');
 });
 
@@ -21,9 +51,20 @@ client.on('message', async (message) => {
     const args = message.content.slice(prefix.length).trim().split(/ +/g);
     const command = args.shift().toLowerCase();
 
-    const data = await Blizzard.getCharacterSpec(args[0], args[1]);
-    const response = `${data.name}: ${data.spec} ${data.class} (${data.role})`
-    message.channel.send(response);
+    switch(command) {
+      case 'add':
+        const charData = await Blizzard.getCharacterSpec(args[0], args[1]);
+
+        break;
+      case 'update':
+        break;
+      case 'remove':
+        break;
+      case 'roster':
+        break;
+      default:
+        message.channel.send('Unrecognized command. Try again or type !help for more help');
+    }
   }
 });
 
