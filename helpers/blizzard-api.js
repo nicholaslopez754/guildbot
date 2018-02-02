@@ -4,7 +4,7 @@ const apikey = process.env.BLIZZARD_API_KEY;
 const axios = require('axios');
 
 async function getCharacterSpec(name, realm) {
-  const requestURL = baseURL + `/character/${realm}/${name}?fields=talents&locale=en_US&apikey=${apikey}`;
+  const requestURL = baseURL + `/character/${realm}/${name}?fields=talents+items&locale=en_US&apikey=${apikey}`;
   try {
     const res = await axios.get(requestURL);
     const activeSpec = res.data.talents.filter((spec) => {
@@ -15,7 +15,8 @@ async function getCharacterSpec(name, realm) {
       name: res.data.name,
       className: specInfo[res.data.class].name,
       spec: activeSpec.spec.name,
-      role: activeSpec.spec.role
+      role: activeSpec.spec.role,
+      ilvl: res.data.items.averageItemLevelEquipped
     }
   } catch(e) {
     console.log(e);

@@ -4,6 +4,7 @@
   "description": "",
   "main": "guildbot.js",
   "dependencies": {
+    "ascii-table": "0.0.9",
     "axios": "^0.17.1",
     "discord.js": "^11.3.0",
     "dotenv": "^4.0.0",
