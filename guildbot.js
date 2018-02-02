@@ -19,26 +19,27 @@ const connection = mysql.createConnection({
 client.on('ready', async () => {
   // Connect to DB
   try {
-    const res = await connection.connect();
+    await connection.connect();
     console.log('Connected to mysql');
   } catch(err) {
     console.log(err);
   }
-  // Create roster table if it doesn't exist
-  const stmt = `
-    CREATE TABLE members (
-      name VARCHAR(255),
-      role VARCHAR(255),
-      class VARCHAR(255),
-      spec VARCHAR(255)
-    )`
 
+  // Create roster table
+  const stmt = `
+    CREATE TABLE IF NOT EXISTS members (
+      name VARCHAR(255),
+      class VARCHAR(255),
+      spec VARCHAR(255),
+      role VARCHAR(255)
+    )`;
   try {
-    const res = connection.query(stmt);
-    console.log('Created members table');
+    await connection.query(stmt);
   } catch(err) {
     console.log(err);
   }
+
+  // Done initializing
   console.log('Guildbot initialized');
 });
 
@@ -50,18 +51,39 @@ client.on('message', async (message) => {
   if(message.content.startsWith(prefix)) {
     const args = message.content.slice(prefix.length).trim().split(/ +/g);
     const command = args.shift().toLowerCase();
+    let stmt = null;
 
     switch(command) {
       case 'add':
-        const charData = await Blizzard.getCharacterSpec(args[0], args[1]);
-
+        const { name, className, spec, role } = await Blizzard.getCharacterSpec(args[0], args[1]);
+        stmt = `
+          INSERT INTO members (name, class, spec, role)
+          VALUES ('${name}', '${className}', '${spec}', '${role}')`;
+        try {
+          const res = await connection.query(stmt);
+          console.log(res);
+        } catch(error) {
+          console.log(error);
+        }
+        message.channel.send(`Added ${name} (${spec} ${className}, ${role})`);
         break;
+
       case 'update':
         break;
+
       case 'remove':
         break;
+
       case 'roster':
+        stmt = `SELECT * FROM members`;
+          connection.query(stmt, (error, rows) => {
+            console.log(JSON.stringify(rows));
+          });
         break;
+
+      case 'help':
+        break;
+
       default:
         message.channel.send('Unrecognized command. Try again or type !help for more help');
     }

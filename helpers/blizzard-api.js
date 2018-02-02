@@ -13,7 +13,7 @@ async function getCharacterSpec(name, realm) {
 
     return {
       name: res.data.name,
-      class: specInfo[res.data.class].name,
+      className: specInfo[res.data.class].name,
       spec: activeSpec.spec.name,
       role: activeSpec.spec.role
     }
