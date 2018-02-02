@@ -77,7 +77,9 @@ client.on('message', async (message) => {
       case 'roster':
         stmt = `SELECT * FROM members`;
           connection.query(stmt, (error, rows) => {
-            console.log(JSON.stringify(rows));
+            rows.map((member) => {
+              console.log(member.name);
+            })
           });
         break;
 
