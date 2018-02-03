@@ -19,7 +19,7 @@ async function getCharacterSpec(name, realm) {
       ilvl: res.data.items.averageItemLevelEquipped
     }
   } catch(e) {
-    console.log(e);
+    throw e;
   }
 }
 

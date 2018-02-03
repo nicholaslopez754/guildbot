@@ -57,31 +57,39 @@ client.on('message', async (message) => {
 
     switch(command) {
       case 'add': {
-        const { name, className, spec, role, ilvl } = await Blizzard.getCharacterSpec(args[0], args[1]);
-        const stmt = `
-          INSERT INTO members (name, class, spec, role, ilvl)
-          VALUES ('${name}', '${className}', '${spec}', '${role}', '${ilvl}')`;
-        connection.connect();
-        connection.query(stmt, (error) => {
-          if(error) return;
-          message.channel.send('```' + `Added ${name} (${ilvl} ${spec} ${className}, ${role})` + '```');
-        });
-        connection.end();
+        try {
+          const { name, className, spec, role, ilvl } = await Blizzard.getCharacterSpec(args[0], args[1]);
+          const stmt = `
+            INSERT INTO members (name, class, spec, role, ilvl)
+            VALUES ('${name}', '${className}', '${spec}', '${role}', '${ilvl}')`;
+          connection.connect();
+          connection.query(stmt, (error) => {
+            if(error) return;
+            message.channel.send('```' + `Added ${name} (${ilvl} ${spec} ${className}, ${role})` + '```');
+          });
+          connection.end();
+        } catch(e) {
+          return;
+        }
         break;
       }
 
       case 'update': {
-        const { name, className, spec, role, ilvl } = await Blizzard.getCharacterSpec(args[0], args[1]);
-        const stmt = `
-          UPDATE members
-          SET spec='${spec}', role='${role}', ilvl='${ilvl}'
-          WHERE name='${name}'`;
-        connection.connect();
-        connection.query(stmt, (error) => {
-          if(error) return;
-          message.channel.send('```' + `Updated ${name} (${ilvl} ${spec} ${className}, ${role})` + '```');
-        });
-        connection.end();
+        try {
+          const { name, className, spec, role, ilvl } = await Blizzard.getCharacterSpec(args[0], args[1]);
+          const stmt = `
+            UPDATE members
+            SET spec='${spec}', role='${role}', ilvl='${ilvl}'
+            WHERE name='${name}'`;
+          connection.connect();
+          connection.query(stmt, (error) => {
+            if(error) return;
+            message.channel.send('```' + `Updated ${name} (${ilvl} ${spec} ${className}, ${role})` + '```');
+          });
+          connection.end();
+        } catch(e) {
+          return;
+        }
         break;
       }
 
