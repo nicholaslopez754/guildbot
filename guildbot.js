@@ -9,7 +9,7 @@ const AsciiTable = require('ascii-table');
 const client = new Discord.Client();
 
 // DB instance
-const pool = createPool({
+const pool = mysql.createPool({
   connectionLimit : 10,
   host     : process.env.MYSQL_HOST,
   user     : process.env.MYSQL_USER,
