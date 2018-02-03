@@ -41,6 +41,7 @@ client.on('ready', async () => {
     console.log(err);
   }
 
+  connection.end();
   // Done initializing
   console.log('Guildbot initialized');
 });
@@ -60,10 +61,12 @@ client.on('message', async (message) => {
         const stmt = `
           INSERT INTO members (name, class, spec, role, ilvl)
           VALUES ('${name}', '${className}', '${spec}', '${role}', '${ilvl}')`;
+        connection.connect();
         connection.query(stmt, (error) => {
           if(error) return;
           message.channel.send('```' + `Added ${name} (${ilvl} ${spec} ${className}, ${role})` + '```');
         });
+        connection.end();
         break;
       }
 
@@ -73,10 +76,12 @@ client.on('message', async (message) => {
           UPDATE members
           SET spec='${spec}', role='${role}', ilvl='${ilvl}'
           WHERE name='${name}'`;
+        connection.connect();
         connection.query(stmt, (error) => {
           if(error) return;
           message.channel.send('```' + `Updated ${name} (${ilvl} ${spec} ${className}, ${role})` + '```');
         });
+        connection.end();
         break;
       }
 
@@ -85,10 +90,12 @@ client.on('message', async (message) => {
         const stmt  = `
           DELETE FROM members
           WHERE name='${name}'`;
+        connection.connect();
         connection.query(stmt, (error) => {
           if(error) return;
           message.channel.send('```' + `Removed ${name}` + '```');
         });
+        connection.end();
         break;
       }
 
@@ -96,6 +103,7 @@ client.on('message', async (message) => {
         const table = new AsciiTable('Fallout Raid Roster');
         let stmt = `SELECT * FROM members ORDER BY role DESC, class ASC, name ASC`;
         table.setHeading('Name', 'Role', 'Spec', 'Class', 'ILvl');
+        connection.connect();
         connection.query(stmt, (error, rows) => {
           if (error) return;
           // Populate the table
@@ -118,11 +126,12 @@ client.on('message', async (message) => {
             message.channel.send('```' + table.toString() + '\n\n' + comp + '\n\n' + avgIlvl + '```');
           })
         });
+        connection.end();
         break;
       }
 
       case 'help': {
-        message.channel.send('```' + 'Options:\n- $add [character] [realm]\n- $update [character]\n- $remove [character]\n- $roster' + '```');
+        message.channel.send('```' + 'Options:\n- $add [character] [realm]\n- $update [character] [realm]\n- $remove [character]\n- $roster' + '```');
         break;
       }
 
