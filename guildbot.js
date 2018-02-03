@@ -8,34 +8,9 @@ const AsciiTable = require('ascii-table');
 // Client instance
 const client = new Discord.Client();
 
-// Handle re-connections
-function initializeConnection(config) {
-    function addDisconnectHandler(connection) {
-        connection.on("error", function (error) {
-            if (error instanceof Error) {
-                if (error.code === "PROTOCOL_CONNECTION_LOST") {
-                    console.error(error.stack);
-                    console.log("Lost connection. Reconnecting...");
-
-                    initializeConnection(connection.config);
-                } else if (error.fatal) {
-                    throw error;
-                }
-            }
-        });
-    }
-
-    let connection = mysql.createConnection(config);
-
-    // Add handlers.
-    addDisconnectHandler(connection);
-
-    connection.connect();
-    return connection;
-}
-
 // DB instance
-const connection = initializeConnection({
+const pool = createPool({
+  connectionLimit : 10,
   host     : process.env.MYSQL_HOST,
   user     : process.env.MYSQL_USER,
   password : process.env.MYSQL_PASSWORD,
@@ -54,7 +29,7 @@ client.on('ready', async () => {
       ilvl INT(3)
     )`;
   try {
-    await connection.query(stmt);
+    await pool.query(stmt);
   } catch(err) {
     return;
   }
@@ -79,7 +54,7 @@ client.on('message', async (message) => {
           const stmt = `
             INSERT INTO members (name, class, spec, role, ilvl)
             VALUES ('${name}', '${className}', '${spec}', '${role}', '${ilvl}')`;
-          connection.query(stmt, (error) => {
+          pool.query(stmt, (error) => {
             if(error) return;
             message.channel.send('```' + `Added ${name} (${ilvl} ${spec} ${className}, ${role})` + '```');
           });
@@ -96,7 +71,7 @@ client.on('message', async (message) => {
             UPDATE members
             SET spec='${spec}', role='${role}', ilvl='${ilvl}'
             WHERE name='${name}'`;
-          connection.query(stmt, (error) => {
+          pool.query(stmt, (error) => {
             if(error) return;
             message.channel.send('```' + `Updated ${name} (${ilvl} ${spec} ${className}, ${role})` + '```');
           });
@@ -111,7 +86,7 @@ client.on('message', async (message) => {
         const stmt  = `
           DELETE FROM members
           WHERE name='${name}'`;
-        connection.query(stmt, (error) => {
+        pool.query(stmt, (error) => {
           if(error) return;
           message.channel.send('```' + `Removed ${name}` + '```');
         });
@@ -122,7 +97,7 @@ client.on('message', async (message) => {
         const table = new AsciiTable('Fallout Raid Roster');
         let stmt = `SELECT * FROM members ORDER BY role DESC, class ASC, name ASC`;
         table.setHeading('Name', 'Role', 'Spec', 'Class', 'ILvl');
-        connection.query(stmt, (error, rows) => {
+        pool.query(stmt, (error, rows) => {
           if (error) return;
           // Populate the table
           rows.forEach((row) => {
@@ -137,7 +112,7 @@ client.on('message', async (message) => {
               SUM(role LIKE 'DPS') AS count_dps,
               AVG(ilvl) AS avg_ilvl
             FROM members`;
-          connection.query(stmt, (error, result) => {
+          pool.query(stmt, (error, result) => {
             if(error) return;
             const comp = `${result[0].count_tank} TANK(S), ${result[0].count_healing} HEALER(S), ${result[0].count_dps} DPS`;
             const avgIlvl = `AVERAGE ITEM LEVEL: ${result[0].avg_ilvl}`;
