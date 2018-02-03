@@ -18,14 +18,6 @@ const connection = mysql.createConnection({
 
 //  Start up
 client.on('ready', async () => {
-  // Connect to DB
-  try {
-    await connection.connect();
-    console.log('Connected to mysql');
-  } catch(err) {
-    console.log(err);
-  }
-
   // Create roster table
   const stmt = `
     CREATE TABLE IF NOT EXISTS members (
@@ -38,10 +30,9 @@ client.on('ready', async () => {
   try {
     await connection.query(stmt);
   } catch(err) {
-    console.log(err);
+    return;
   }
 
-  connection.end();
   // Done initializing
   console.log('Guildbot initialized');
 });
@@ -62,12 +53,10 @@ client.on('message', async (message) => {
           const stmt = `
             INSERT INTO members (name, class, spec, role, ilvl)
             VALUES ('${name}', '${className}', '${spec}', '${role}', '${ilvl}')`;
-          connection.connect();
           connection.query(stmt, (error) => {
             if(error) return;
             message.channel.send('```' + `Added ${name} (${ilvl} ${spec} ${className}, ${role})` + '```');
           });
-          connection.end();
         } catch(e) {
           return;
         }
@@ -81,12 +70,10 @@ client.on('message', async (message) => {
             UPDATE members
             SET spec='${spec}', role='${role}', ilvl='${ilvl}'
             WHERE name='${name}'`;
-          connection.connect();
           connection.query(stmt, (error) => {
             if(error) return;
             message.channel.send('```' + `Updated ${name} (${ilvl} ${spec} ${className}, ${role})` + '```');
           });
-          connection.end();
         } catch(e) {
           return;
         }
@@ -98,12 +85,10 @@ client.on('message', async (message) => {
         const stmt  = `
           DELETE FROM members
           WHERE name='${name}'`;
-        connection.connect();
         connection.query(stmt, (error) => {
           if(error) return;
           message.channel.send('```' + `Removed ${name}` + '```');
         });
-        connection.end();
         break;
       }
 
@@ -111,7 +96,6 @@ client.on('message', async (message) => {
         const table = new AsciiTable('Fallout Raid Roster');
         let stmt = `SELECT * FROM members ORDER BY role DESC, class ASC, name ASC`;
         table.setHeading('Name', 'Role', 'Spec', 'Class', 'ILvl');
-        connection.connect();
         connection.query(stmt, (error, rows) => {
           if (error) return;
           // Populate the table
@@ -134,7 +118,6 @@ client.on('message', async (message) => {
             message.channel.send('```' + table.toString() + '\n\n' + comp + '\n\n' + avgIlvl + '```');
           })
         });
-        connection.end();
         break;
       }
 
