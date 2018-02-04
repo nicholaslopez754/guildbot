@@ -4,6 +4,7 @@ const Blizzard = require('./helpers/blizzard-api.js');
 const dotenv = require('dotenv').config();
 const mysql = require('mysql');
 const AsciiTable = require('ascii-table');
+const guildName = process.env.GUILD_NAME;
 
 // Client instance
 const client = new Discord.Client();
@@ -94,7 +95,7 @@ client.on('message', async (message) => {
       }
 
       case 'roster': {
-        const table = new AsciiTable('Fallout Raid Roster');
+        const table = new AsciiTable(`${guildName} Raid Roster`);
         let stmt = `SELECT * FROM members ORDER BY role DESC, class ASC, name ASC`;
         table.setHeading('Name', 'Role', 'Spec', 'Class', 'ILvl');
         pool.query(stmt, (error, rows) => {
