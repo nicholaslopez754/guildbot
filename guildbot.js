@@ -9,6 +9,20 @@ const guildName = process.env.GUILD_NAME;
 // Client instance
 const client = new Discord.Client();
 
+// raid constants
+RAID_READY = 340;
+RAID_OK = 335;
+
+const isRaidReady = (itemLevel) => {
+  if(itemLevel >= RAID_READY) {
+    return 'Good';
+  } else if(itemLevel < RAID_READY && itemLevel >= RAID_OK) {
+    return 'OK';
+  } else {
+    return 'Low';
+  }
+}
+
 // DB instance
 const pool = mysql.createPool({
   connectionLimit : 10,
@@ -38,6 +52,7 @@ client.on('ready', async () => {
   // Done initializing
   console.log('Guildbot initialized');
 });
+
 
 // Event handler for user interaction
 const prefix = '$';
@@ -97,12 +112,12 @@ client.on('message', async (message) => {
       case 'roster': {
         const table = new AsciiTable(`${guildName} Raid Roster`);
         let stmt = `SELECT * FROM members ORDER BY role DESC, class ASC, name ASC`;
-        table.setHeading('Name', 'Role', 'Spec', 'Class', 'ILvl');
+        table.setHeading('Name', 'Role', 'Spec', 'Class', 'ILvl', 'Raid Ready');
         pool.query(stmt, (error, rows) => {
           if (error) return;
           // Populate the table
           rows.forEach((row) => {
-            table.addRow(row.name, row.role, row.spec, row.class, row.ilvl);
+            table.addRow(row.name, row.role, row.spec, row.class, row.ilvl, isRaidReady(Number(row.ilvl)));
           });
 
           // Collect role counts
@@ -124,7 +139,7 @@ client.on('message', async (message) => {
       }
 
       case 'help': {
-        message.channel.send('```' + 'Options:\n- $add [character] [realm]\n- $update [character] [realm]\n- $remove [character]\n- $roster' + '```');
+        message.channel.send('```' + 'Options:\n- $add [character] [realm]\n- $update [character] [realm]\n- $remove [character]\n- $roster' + '\n\nMade by Vael, bug him if I\'m broken!' + '```');
         break;
       }
 

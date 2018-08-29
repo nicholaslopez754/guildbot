@@ -1,11 +1,11 @@
 const baseURL = 'https://us.api.battle.net/wow';
 const dotenv = require('dotenv').config()
 const apikey = process.env.BLIZZARD_API_KEY;
+const defaultRealm = process.env.REALM_NAME;
 const axios = require('axios');
 
-async function getCharacterSpec(name, realm) {
+async function getCharacterSpec(name, realm=defaultRealm) {
   const requestURL = encodeURI(baseURL + `/character/${realm}/${name}?fields=talents+items&locale=en_US&apikey=${apikey}`);
-  console.log(requestURL);
   try {
     const res = await axios.get(requestURL);
     const activeSpec = res.data.talents.filter((spec) => {
