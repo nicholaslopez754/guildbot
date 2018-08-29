@@ -46,6 +46,7 @@ client.on('ready', async () => {
   try {
     await pool.query(stmt);
   } catch(err) {
+    console.log(err);
     return;
   }
 
@@ -71,10 +72,14 @@ client.on('message', async (message) => {
             INSERT INTO members (name, class, spec, role, ilvl)
             VALUES ('${name}', '${className}', '${spec}', '${role}', '${ilvl}')`;
           pool.query(stmt, (error) => {
-            if(error) return;
+            if(error) {
+              console.log(error);
+              return;
+            }
             message.channel.send('```' + `Added ${name} (${ilvl} ${spec} ${className}, ${role})` + '```');
           });
         } catch(e) {
+          console.log(e);
           return;
         }
         break;
@@ -88,10 +93,14 @@ client.on('message', async (message) => {
             SET spec='${spec}', role='${role}', ilvl='${ilvl}'
             WHERE name='${name}'`;
           pool.query(stmt, (error) => {
-            if(error) return;
+            if(error) {
+              console.log(error);
+              return;
+            }
             message.channel.send('```' + `Updated ${name} (${ilvl} ${spec} ${className}, ${role})` + '```');
           });
         } catch(e) {
+          console.log(e);
           return;
         }
         break;
@@ -103,7 +112,10 @@ client.on('message', async (message) => {
           DELETE FROM members
           WHERE name='${name}'`;
         pool.query(stmt, (error) => {
-          if(error) return;
+          if(error) {
+            console.log(error);
+            return;
+          }
           message.channel.send('```' + `Removed ${name}` + '```');
         });
         break;
@@ -114,7 +126,10 @@ client.on('message', async (message) => {
         let stmt = `SELECT * FROM members ORDER BY role DESC, class ASC, name ASC`;
         table.setHeading('Name', 'Role', 'Spec', 'Class', 'ILvl', 'Raid Ready');
         pool.query(stmt, (error, rows) => {
-          if (error) return;
+          if (error) {
+            console.log(error);
+            return;
+          }
           // Populate the table
           rows.forEach((row) => {
             table.addRow(row.name, row.role, row.spec, row.class, row.ilvl, isRaidReady(Number(row.ilvl)));
@@ -129,7 +144,10 @@ client.on('message', async (message) => {
               AVG(ilvl) AS avg_ilvl
             FROM members`;
           pool.query(stmt, (error, result) => {
-            if(error) return;
+            if(error) {
+              console.log(error);
+              return;
+            }
             const comp = `${result[0].count_tank} TANK(S), ${result[0].count_healing} HEALER(S), ${result[0].count_dps} DPS`;
             const avgIlvl = `AVERAGE ITEM LEVEL: ${result[0].avg_ilvl}`;
             message.channel.send('```' + table.toString() + '\n\n' + comp + '\n\n' + avgIlvl + '```');

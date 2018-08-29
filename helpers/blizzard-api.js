@@ -6,6 +6,7 @@ const axios = require('axios');
 
 async function getCharacterSpec(name, realm=defaultRealm) {
   const requestURL = encodeURI(baseURL + `/character/${realm}/${name}?fields=talents+items&locale=en_US&apikey=${apikey}`);
+  console.log(requestURL);
   try {
     const res = await axios.get(requestURL);
     const activeSpec = res.data.talents.filter((spec) => {
@@ -20,6 +21,7 @@ async function getCharacterSpec(name, realm=defaultRealm) {
       ilvl: res.data.items.averageItemLevelEquipped
     }
   } catch(e) {
+    console.log(e);
     throw e;
   }
 }
