@@ -41,7 +41,8 @@ client.on('ready', async () => {
       class VARCHAR(255),
       spec VARCHAR(255),
       role VARCHAR(255),
-      ilvl INT(3)
+      ilvl INT(3),
+      PRIMARY KEY(name)
     )`;
   try {
     await pool.query(stmt);
@@ -69,7 +70,7 @@ client.on('message', async (message) => {
         try {
           const { name, className, spec, role, ilvl } = await Blizzard.getCharacterSpec(args[0], args[1]);
           const stmt = `
-            INSERT INTO members (name, class, spec, role, ilvl)
+            REPLACE INTO members (name, class, spec, role, ilvl)
             VALUES ('${name}', '${className}', '${spec}', '${role}', '${ilvl}')`;
           pool.query(stmt, (error) => {
             if(error) {
