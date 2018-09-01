@@ -78,7 +78,12 @@ client.on('message', async (message) => {
               console.log(error);
               return;
             }
-            message.channel.send('```' + `Added ${name} (${ilvl} ${spec} ${className}, ${role})` + '```');
+            const embed = new Discord.RichEmbed()
+              .setColor(0x00Ae86)
+              .setTimestamp()
+              .setFooter('Type $help to view more commands. Beep Boop.')
+              .setDescription(`Added [${name}](${wowArmoryUrl}/${realm}/${name}) (${ilvl} ${spec} ${className})`);
+            message.channel.send({embed});
           });
         } catch(e) {
           console.log(e);
@@ -99,7 +104,12 @@ client.on('message', async (message) => {
               console.log(error);
               return;
             }
-            message.channel.send('```' + `Updated ${name} (${ilvl} ${spec} ${className}, ${role})` + '```');
+            const embed = new Discord.RichEmbed()
+              .setColor(0x00Ae86)
+              .setTimestamp()
+              .setFooter('Type $help to view more commands. Beep Boop.')
+              .setDescription(`Updated [${name}](${wowArmoryUrl}/${realm}/${name}) (${ilvl} ${spec} ${className})`);
+            message.channel.send({embed});
           });
         } catch(e) {
           console.log(e);
@@ -118,24 +128,23 @@ client.on('message', async (message) => {
             console.log(error);
             return;
           }
-          message.channel.send('```' + `Removed ${name}` + '```');
+          const embed = new Discord.RichEmbed()
+            .setColor(0x00Ae86)
+            .setTimestamp()
+            .setFooter('Type $help to view more commands. Beep Boop.')
+            .setDescription(`Removed ${name}`)
+          message.channel.send({embed});
         });
         break;
       }
 
       case 'roster': {
-        //const table = new AsciiTable(`${guildName} Raid Roster`);
         let stmt = `SELECT * FROM members ORDER BY role DESC, class ASC, name ASC`;
-        // table.setHeading('Name', 'Role', 'Spec', 'Class', 'ILvl', 'Raid Ready');
         pool.query(stmt, (error, rows) => {
           if (error) {
             console.log(error);
             return;
           }
-          // Populate the table
-          rows.forEach((row) => {
-            // table.addRow(row.name, row.role, row.spec, row.class, row.ilvl, isRaidReady(Number(row.ilvl)));
-          });
 
           // Collect role counts
           stmt = `
@@ -154,26 +163,30 @@ client.on('message', async (message) => {
             const avgIlvl = `Average item level: **${result[0].avg_ilvl}**`;
 
             const embed = new Discord.RichEmbed()
-              .setTitle(`${guildName} Raid Roster`)
               .setColor(0x00Ae86)
-              .setDescription(`Raid composition: **${comp}**\n${avgIlvl}`)
               .setTimestamp()
-              .setFooter('Beep Boop');
+              .setFooter('Type $help to view more commands. Beep Boop.');
 
-            let nameString = '';
-            let classString = '';
-            let ilvlString = '';
+            if(rows.length > 0) {
+              let nameString = '';
+              let classString = '';
+              let ilvlString = '';
 
-            rows.forEach(row => {
-              nameString += `[${row.name}](${wowArmoryUrl}/${realm}/${row.name})\n`;
-              classString += `${row.spec} ${row.class}\n`;
-              ilvlString += `${row.ilvl} - ${isRaidReady(Number(row.ilvl))}\n`;
-            });
-            
-            embed.addField('Name', nameString, true)
-            embed.addField('Specialization', classString, true)
-            embed.addField('Item Level', ilvlString, true)
-            embed.addBlankField(true)
+              rows.forEach(row => {
+                nameString += `${row.name}\n`;
+                classString += `${row.spec} ${row.class}\n`;
+                ilvlString += `${row.ilvl} - ${isRaidReady(Number(row.ilvl))}\n`;
+              });
+
+              embed.setTitle(`${guildName} Raid Roster`)
+              embed.setDescription(`Raid composition: **${comp}**\n${avgIlvl}`)
+              embed.addField('Name', nameString, true)
+              embed.addField('Specialization', classString, true)
+              embed.addField('Item Level', ilvlString, true)
+              embed.addBlankField(true);
+            } else {
+              embed.setDescription('There are no members in the roster.')
+            }
             
             message.channel.send({embed});
           })
@@ -182,12 +195,26 @@ client.on('message', async (message) => {
       }
 
       case 'help': {
-        message.channel.send('```' + 'Options:\n- $add [character] [realm]\n- $update [character] [realm]\n- $remove [character]\n- $roster' + '\n\nMade by Vael, bug him if I\'m broken!' + '```');
+        const embed = new Discord.RichEmbed()
+          .setColor(0x00Ae86)
+          .setTimestamp()
+          .setFooter('Beep Boop.')
+          .setTitle('Options')
+          .addField('$add [character]', 'Adds your character to the roster. Uses info from last logout')
+          .addField('$update [character]', 'Updates your character in the roster. Uses info from last logout')
+          .addField('$remove [character]', 'Removes your character from the roster')
+          .addField('$roster', 'View the roster')
+        message.channel.send({embed});
         break;
       }
 
       default:
-        message.channel.send('```' +  `Unrecognized command. Try again or type ${prefix}help for more help. If you're still stuck, contact Vael.` + '```');
+        const embed = new Discord.RichEmbed()
+          .setColor(0x00Ae86)
+          .setTimestamp()
+          .setFooter('Type $help to view more commands. Beep Boop.')
+          .setDescription(`Unrecognized command`)
+        message.channel.send({embed});
     }
   }
 });
