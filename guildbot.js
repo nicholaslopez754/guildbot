@@ -3,8 +3,9 @@ const Discord = require('discord.js');
 const Blizzard = require('./helpers/blizzard-api.js');
 const dotenv = require('dotenv').config();
 const mysql = require('mysql');
-const AsciiTable = require('ascii-table');
 const guildName = process.env.GUILD_NAME;
+const realm = process.env.REALM_NAME;
+const wowArmoryUrl = 'https://worldofwarcraft.com/en-us/character';
 
 // Client instance
 const client = new Discord.Client();
@@ -123,9 +124,9 @@ client.on('message', async (message) => {
       }
 
       case 'roster': {
-        const table = new AsciiTable(`${guildName} Raid Roster`);
+        //const table = new AsciiTable(`${guildName} Raid Roster`);
         let stmt = `SELECT * FROM members ORDER BY role DESC, class ASC, name ASC`;
-        table.setHeading('Name', 'Role', 'Spec', 'Class', 'ILvl', 'Raid Ready');
+        // table.setHeading('Name', 'Role', 'Spec', 'Class', 'ILvl', 'Raid Ready');
         pool.query(stmt, (error, rows) => {
           if (error) {
             console.log(error);
@@ -133,7 +134,7 @@ client.on('message', async (message) => {
           }
           // Populate the table
           rows.forEach((row) => {
-            table.addRow(row.name, row.role, row.spec, row.class, row.ilvl, isRaidReady(Number(row.ilvl)));
+            // table.addRow(row.name, row.role, row.spec, row.class, row.ilvl, isRaidReady(Number(row.ilvl)));
           });
 
           // Collect role counts
@@ -149,9 +150,32 @@ client.on('message', async (message) => {
               console.log(error);
               return;
             }
-            const comp = `${result[0].count_tank} TANK(S), ${result[0].count_healing} HEALER(S), ${result[0].count_dps} DPS`;
-            const avgIlvl = `AVERAGE ITEM LEVEL: ${result[0].avg_ilvl}`;
-            message.channel.send('```' + table.toString() + '\n\n' + comp + '\n\n' + avgIlvl + '```');
+            const comp = `${result[0].count_tank} tanks(s), ${result[0].count_healing} healer(s), ${result[0].count_dps} DPS`;
+            const avgIlvl = `Average item level: **${result[0].avg_ilvl}**`;
+
+            const embed = new Discord.RichEmbed()
+              .setTitle(`${guildName} Raid Roster`)
+              .setColor(0x00Ae86)
+              .setDescription(`Raid composition: **${comp}**\n${avgIlvl}`)
+              .setTimestamp()
+              .setFooter('Beep Boop');
+
+            let nameString = '';
+            let classString = '';
+            let ilvlString = '';
+
+            rows.forEach(row => {
+              nameString += `[${row.name}](${wowArmoryUrl}/${realm}/${row.name})\n`;
+              classString += `${row.spec} ${row.class}\n`;
+              ilvlString += `${row.ilvl} - ${isRaidReady(Number(row.ilvl))}\n`;
+            });
+            
+            embed.addField('Name', nameString, true)
+            embed.addField('Specialization', classString, true)
+            embed.addField('Item Level', ilvlString, true)
+            embed.addBlankField(true)
+            
+            message.channel.send({embed});
           })
         });
         break;
